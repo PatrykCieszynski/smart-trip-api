@@ -97,7 +97,7 @@ public class MapService {
 
         return CityAutocompleteResponse.builder()
                 .id(feature.getId())
-                .name(feature.getTextPl() != null ? feature.getTextPl() : feature.getText())
+                .name(feature.getTextPl() != null ? feature.getPlaceNamePl() : feature.getPlaceName())
                 .longitude(feature.getCenter() != null && !feature.getCenter().isEmpty() ?
                         feature.getCenter().get(0) : null)
                 .latitude(feature.getCenter() != null && feature.getCenter().size() > 1 ?
