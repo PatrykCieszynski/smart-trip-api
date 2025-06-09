@@ -36,4 +36,12 @@ public class MapController {
         return ResponseEntity.ok(cities);
     }
 
+    @GetMapping("/cities/name-by-coords")
+    public ResponseEntity<CityAutocompleteResponse> getLocationName(
+            @RequestParam("lat") String lat,
+            @RequestParam("lng") String lng) {
+        CityAutocompleteResponse locationName = mapService.getLocationNameByCoords(lat, lng);
+        return ResponseEntity.ok(locationName);
+    }
+
 }

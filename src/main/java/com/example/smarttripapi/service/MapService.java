@@ -75,6 +75,46 @@ public class MapService {
         }
     }
 
+    public CityAutocompleteResponse getLocationNameByCoords(String lat, String lng) {
+        if (lat == null || lng == null) {
+            return null;
+        }
+        try {
+            log.info("Calling MapTiler API for coordinates: {}, {}", lat, lng);
+
+            MapTilerCityResponse response = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host(MAPTILER_GEOCODING_HOST)
+                            .path("/geocoding/{lng},{lat}.json")
+                            .queryParam("key", maptilerApiKey)
+                            .queryParam("language", "pl")
+                            .build(lng.trim(),lat.trim()))
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, (request, responseError) -> {
+                        log.error("4xx error from MapTiler API: {}", responseError.getStatusText());
+                        throw new RuntimeException("Client error: " + responseError.getStatusText());
+                    })
+                    .onStatus(HttpStatusCode::is5xxServerError, (request, responseError) -> {
+                        log.error("5xx error from MapTiler API: {}", responseError.getStatusText());
+                        throw new RuntimeException("Server error: " + responseError.getStatusText());
+                    })
+                    .body(MapTilerCityResponse.class);
+
+            if (response == null || response.getFeatures() == null) {
+                log.warn("Empty response from MapTiler API");
+                return null;
+            }
+
+            List<MapTilerFeature> cities = response.getFeatures();
+            log.info("Found {} places for coordinates: {}, {}", cities.size(), lat, lng);
+            return mapToSimpleCity(cities.getFirst());
+        } catch (Exception e) {
+            log.error("Error calling MapTiler API for coords lat '{}', lng '{}: {}", lat, lng, e.getMessage(), e);
+            return null;
+        }
+    }
+
     private List<CityAutocompleteResponse> mapToSimpleResponse(List<MapTilerFeature> features) {
         return features.stream()
                 .filter(this::isCityOrTown) // Filtrujemy tylko miasta
@@ -120,6 +160,4 @@ public class MapService {
         }
         return "location";
     }
-
-
 }
