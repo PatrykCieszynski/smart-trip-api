@@ -115,6 +115,27 @@ public class MapService {
         }
     }
 
+    public byte[] getTileFromMapTiler(int z, int x, int y) {
+        try {
+            log.info("Calling MapTiler API for tile: {}, {}, {}", z, x, y);
+
+            return restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host(MAPTILER_GEOCODING_HOST)
+                            .path("/maps/basic-v2/{z}/{x}/{y}.png")
+                            .queryParam("key", maptilerApiKey)
+                            .build(z, x, y))
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, (request, responseError) ->
+                            log.error("4xx error from MapTiler API: {}", responseError.getStatusText()))
+                    .body(byte[].class);
+        }  catch (Exception e) {
+            log.error("Error calling MapTiler API for tile: {}, {}, {}: {}", z, x, y, e.getMessage(), e);
+            return null;
+        }
+    }
+
     private List<CityAutocompleteResponse> mapToSimpleResponse(List<MapTilerFeature> features) {
         return features.stream()
                 .filter(this::isCityOrTown) // Filtrujemy tylko miasta

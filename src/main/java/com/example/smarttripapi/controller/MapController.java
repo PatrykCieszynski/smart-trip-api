@@ -2,16 +2,19 @@ package com.example.smarttripapi.controller;
 
 import com.example.smarttripapi.dto.internal.CityAutocompleteResponse;
 import com.example.smarttripapi.service.MapService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,6 +45,23 @@ public class MapController {
             @RequestParam("lng") String lng) {
         CityAutocompleteResponse locationName = mapService.getLocationNameByCoords(lat, lng);
         return ResponseEntity.ok(locationName);
+    }
+
+    @GetMapping("/{z}/{x}/{y}.png")
+    @Cacheable(value = "tiles", key = "#z + '_' + #x + '_' + #y")
+    public ResponseEntity<byte[]> getTile(
+            @PathVariable @Valid @Min(0)
+            int z,
+            @PathVariable @Valid @Min(0)
+            int x,
+            @PathVariable @Valid @Min(0)
+            int y) {
+        byte[] tileData = mapService.getTileFromMapTiler(z, x, y);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .cacheControl(CacheControl.maxAge(24, TimeUnit.HOURS))
+                .body(tileData);
     }
 
 }
