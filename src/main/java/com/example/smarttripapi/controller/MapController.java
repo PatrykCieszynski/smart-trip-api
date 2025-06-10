@@ -1,6 +1,8 @@
 package com.example.smarttripapi.controller;
 
+import com.example.smarttripapi.dto.api.RouteRequest;
 import com.example.smarttripapi.dto.internal.CityAutocompleteResponse;
+import com.example.smarttripapi.dto.internal.RouteResponse;
 import com.example.smarttripapi.service.MapService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -64,4 +66,10 @@ public class MapController {
                 .body(tileData);
     }
 
+
+    @PostMapping("/route")
+    public ResponseEntity<RouteResponse> getRoute(@RequestBody RouteRequest request) {
+        RouteResponse response = mapService.getRoute(request);
+        return ResponseEntity.ok(response);
+    }
 }

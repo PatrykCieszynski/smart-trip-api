@@ -1,8 +1,11 @@
 package com.example.smarttripapi.service;
 
+import com.example.smarttripapi.dto.api.RouteRequest;
 import com.example.smarttripapi.dto.external.MapTilerCityResponse;
 import com.example.smarttripapi.dto.external.MapTilerFeature;
+import com.example.smarttripapi.dto.external.OpenRouteServiceGeojsonResponse;
 import com.example.smarttripapi.dto.internal.CityAutocompleteResponse;
+import com.example.smarttripapi.dto.internal.RouteResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -25,7 +28,11 @@ public class MapService {
     @Value("${maptiler.api.key:}")
     private String maptilerApiKey;
 
+    @Value("${openrouteservice.api.key:}")
+    private String openrouteserviceApiKey;
+
     private static final String MAPTILER_GEOCODING_HOST = "api.maptiler.com";
+    private static final String OPENROUTESERVICES_HOST = "api.openrouteservice.org";
 
     public List<CityAutocompleteResponse> searchCities(String query) {
         List<MapTilerFeature> rawResults = searchCitiesRaw(query);
@@ -136,9 +143,34 @@ public class MapService {
         }
     }
 
+    public RouteResponse getRoute(RouteRequest request) {
+        try {
+            log.info("Calling OpenRouteService API for request: {}", request);
+
+            OpenRouteServiceGeojsonResponse response = restClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host(OPENROUTESERVICES_HOST)
+                            .path("/v2/directions/driving-car/geojson")
+                            .build())
+                    .header("Authorization", "Bearer " + openrouteserviceApiKey)  // DODANE "Bearer "
+                    .header("Content-Type", "application/json")
+                    .body(request)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, (request1, responseError) ->
+                            log.error("4xx error from OpenRouteService API: {}", responseError.getStatusText()))
+                    .body(OpenRouteServiceGeojsonResponse.class);
+
+            return mapToRouteResponse(response);
+        } catch (Exception e) {
+            log.error("Error calling OpenRouteService API for request {}: {}", request, e.getMessage(), e);
+            return null;
+        }
+    }
+
     private List<CityAutocompleteResponse> mapToSimpleResponse(List<MapTilerFeature> features) {
         return features.stream()
-                .filter(this::isCityOrTown) // Filtrujemy tylko miasta
+                .filter(this::isCityOrTown)
                 .map(this::mapToSimpleCity)
                 .collect(Collectors.toList());
     }
@@ -181,4 +213,37 @@ public class MapService {
         }
         return "location";
     }
+
+    private RouteResponse mapToRouteResponse(OpenRouteServiceGeojsonResponse openRouteResponse) {
+        if (openRouteResponse == null || openRouteResponse.features().isEmpty()) {
+            return null;
+        }
+
+        var feature = openRouteResponse.features().getFirst();
+        var properties = feature.properties();
+        var summary = properties.summary();
+        var geometry = feature.geometry();
+        var metadata = openRouteResponse.metadata();
+
+        List<RouteResponse.RoutePoint> routePoints = geometry.coordinates().stream()
+                .map(coord -> new RouteResponse.RoutePoint(coord.getFirst(), coord.get(1)))
+                .toList();
+
+        RouteResponse.RouteQuery routeQuery = null;
+        if (metadata != null && metadata.query() != null) {
+            var originalQuery = metadata.query();
+            List<RouteResponse.RoutePoint> queryPoints = originalQuery.coordinates().stream()
+                    .map(coord -> new RouteResponse.RoutePoint(coord.getFirst(), coord.get(1)))
+                    .toList();
+            routeQuery = new RouteResponse.RouteQuery(queryPoints);
+        }
+
+        return new RouteResponse(
+                summary.distance(),
+                summary.duration(),
+                routePoints,
+                routeQuery
+        );
+    }
+
 }
