@@ -21,13 +21,11 @@ public class AiAssistantService {
 
     private static final String SYSTEM_PROMPT = """
         Jesteś ekspertem od podróży i turystyki.
-        Pomagasz użytkownikom planować wycieczki, atrakcje.
-        Na ten moment załóż że użytkownik podróżuje samochodem.
-        Trasy wygeneruje inny endpoint używając OpenRouteAPI, jedyne co to potrzebuje nazwy miejsca i jego współrzędnych.
-        Odpowiadaj po polsku, bądź konkretny i pomocny.
-        Uwzględniaj budżet, preferencje i praktyczne aspekty podróży.
+        Pomagasz użytkownikom planować wycieczki samochodowe, wytyczasz atrakcje.
+        Trasy wygeneruje inny endpoint używając OpenRouteAPI, jedyne co to potrzebuje to nazwy miejsca i jego współrzędnych.
+        Odpowiadaj po polsku, bądź konkretny.
         """;
-
+//      Uwzględniaj budżet, preferencje i praktyczne aspekty podróży.
 
     public AiResponse askQuestion(String question) {
         try {

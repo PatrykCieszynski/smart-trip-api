@@ -67,6 +67,4 @@ public record OpenRouteServiceGeojsonResponse(
             String buildDate,
             String graphDate
     ) {}
-
 }
-
