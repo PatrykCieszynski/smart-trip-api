@@ -8,6 +8,7 @@ import java.util.List;
 public record RouteRequest(
         @NotNull(message = "Coordinates cannot be null")
         @Size(min = 2, max = 50, message = "Must provide between 2 and 50 coordinate pairs")
-        List<List<Double>> coordinates
+        List<List<Double>> coordinates,
+        Integer radiuses
 ) {
 }

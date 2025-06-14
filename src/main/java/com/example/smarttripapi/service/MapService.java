@@ -144,8 +144,14 @@ public class MapService {
     }
 
     public RouteResponse getRoute(RouteRequest request) {
+        RouteRequest newRequest = new RouteRequest(
+                request.coordinates(),
+                1000 // ustawiamy radiuses na 1000
+        );
+
         try {
-            log.info("Calling OpenRouteService API for request: {}", request);
+
+            log.info("Calling OpenRouteService API for request: {}", newRequest);
 
             OpenRouteServiceGeojsonResponse response = restClient.post()
                     .uri(uriBuilder -> uriBuilder
@@ -155,7 +161,7 @@ public class MapService {
                             .build())
                     .header("Authorization", "Bearer " + openrouteserviceApiKey)  // DODANE "Bearer "
                     .header("Content-Type", "application/json")
-                    .body(request)
+                    .body(newRequest)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (request1, responseError) ->
                             log.error("4xx error from OpenRouteService API: {}", responseError.getStatusText()))
@@ -163,7 +169,7 @@ public class MapService {
 
             return mapToRouteResponse(response);
         } catch (Exception e) {
-            log.error("Error calling OpenRouteService API for request {}: {}", request, e.getMessage(), e);
+            log.error("Error calling OpenRouteService API for request {}: {}", newRequest, e.getMessage(), e);
             return null;
         }
     }
