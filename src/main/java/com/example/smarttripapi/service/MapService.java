@@ -146,7 +146,7 @@ public class MapService {
     public RouteResponse getRoute(RouteRequest request) {
         RouteRequest newRequest = new RouteRequest(
                 request.coordinates(),
-                1000 // ustawiamy radiuses na 1000
+                3500
         );
 
         try {

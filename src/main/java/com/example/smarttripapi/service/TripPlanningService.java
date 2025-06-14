@@ -34,4 +34,21 @@ public class TripPlanningService {
         return new RouteWithAiSuggestionsResponse(route, aiResponse);
     }
 
+    public RouteWithAiSuggestionsResponse createRouteWithAiSuggestions(String prompt) {
+        // Prompt do AI (możesz dodać np. informacje geograficzne)
+
+        AiResponse aiResponse = aiAssistantService.askQuestion(prompt);
+
+        // Stwórz nowy RouteRequest z punktów które są w aiResponse locations
+        List<List<Double>> coordinatesFromLocations = aiResponse.getLocations()
+                .stream()
+                .map(loc -> List.of(loc.getLongitude(), loc.getLatitude()))
+                .toList();
+        RouteRequest updatedRequest = new RouteRequest(coordinatesFromLocations, 1000);
+
+        RouteResponse route = mapService.getRoute(updatedRequest);
+
+        return new RouteWithAiSuggestionsResponse(route, aiResponse);
+    }
+
 }

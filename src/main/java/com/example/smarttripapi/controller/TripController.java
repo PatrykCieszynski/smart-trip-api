@@ -17,4 +17,9 @@ public class TripController {
     public ResponseEntity<RouteWithAiSuggestionsResponse> getRouteWithAi(@RequestBody RouteRequest request) {
         return ResponseEntity.ok(tripPlanningService.getRouteWithAiSuggestions(request));
     }
+
+    @PostMapping("/route-with-ai-via-assistant")
+    public ResponseEntity<RouteWithAiSuggestionsResponse> getRoute(@RequestBody String prompt) {
+        return ResponseEntity.ok(tripPlanningService.createRouteWithAiSuggestions(prompt));
+    }
 }

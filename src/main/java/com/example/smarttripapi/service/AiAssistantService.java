@@ -61,7 +61,8 @@ public class AiAssistantService {
         Atrakcje powinny być po drodze, ale użytkownik może lekko zboczyć z trasy.
         Optymalna droga do atrakcji będzie wytyczona przez OpenRouteService
         
-        Zawsze zwracaj poprawny JSON, w locations podaj wszystkie miejsca na trasie, włącznie z startowym i końcowym według kolejności wycieczki.
+        Zawsze zwracaj poprawny JSON, w locations podaj wszystkie miejsca na trasie według kolejności wycieczki,
+        włącznie z startowym i końcowym, które muszą być identyczne jak w podane przez użytkownika.
         """;
 
     public AiResponse askQuestion(String question) {
